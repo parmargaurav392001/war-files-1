@@ -1,0 +1,62 @@
+USE [SBI_IResolve];
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[USP_GetMailConfiguration]
+    @ContactID VARCHAR(50) = NULL,
+    @Skillset  VARCHAR(50) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Scenario 1: Return credential matching specific Skillset if active
+    IF @Skillset IS NOT NULL AND LTRIM(RTRIM(@Skillset)) <> '' AND EXISTS (
+        SELECT 1 
+        FROM [SBI_IResolve].[gaurang].[smtp_mail_credential]
+        WHERE [skill] = @Skillset
+          AND [is_active] = 1
+    )
+    BEGIN
+        SELECT TOP (1)
+             [id]
+            ,[created_date]
+            ,[from_email]
+            ,[host]
+            ,[is_active]
+            ,[password]
+            ,[port]
+            ,[protocol]
+            ,[smtp_auth]
+            ,[smtp_ssl_trust]
+            ,[start_tls_enable]
+            ,[updated_date]
+            ,[username]
+            ,[skill]
+        FROM [SBI_IResolve].[gaurang].[smtp_mail_credential]
+        WHERE [skill] = @Skillset
+          AND [is_active] = 1
+        ORDER BY [id] DESC;
+        RETURN;
+    END
+
+    -- Scenario 2: Return default active credential (fallback)
+    SELECT TOP (1)
+         [id]
+        ,[created_date]
+        ,[from_email]
+        ,[host]
+        ,[is_active]
+        ,[password]
+        ,[port]
+        ,[protocol]
+        ,[smtp_auth]
+        ,[smtp_ssl_trust]
+        ,[start_tls_enable]
+        ,[updated_date]
+        ,[username]
+        ,[skill]
+    FROM [SBI_IResolve].[gaurang].[smtp_mail_credential]
+    WHERE [is_active] = 1
+    ORDER BY [id] ASC;
+
+END
+GO
